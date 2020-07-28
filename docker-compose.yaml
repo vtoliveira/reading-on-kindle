@@ -1,0 +1,39 @@
+version: '2.1'
+services:
+    postgres:
+        hostname: postgres
+        image:  postgres:9.6
+        environment: 
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+            - PGDATA=/var/lib/postgresql/pgdata
+        volumes:
+            - ./pgdata:/var/lib/postgresql/pgdata
+    
+    webserver:
+        hostname: webserver
+        build:
+            context: .
+        restart: always
+        depends_on:
+            - postgres
+        environment: 
+            - EXECUTOR=Local
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+            - ./plugins:/usr/local/airflow/plugins
+        ports:
+            - "8080:8080"
+        command: webserver
+        healthcheck:
+            test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+            interval: 30s
+            timeout: 30s
+            retries: 3
+    
+
+
